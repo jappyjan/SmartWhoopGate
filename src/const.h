@@ -86,8 +86,9 @@ const uint16_t channelFreqTable[] PROGMEM = {
      "-----END CERTIFICATE-----"
 #define FIRMWARE_UPDATE_SERVER_CERTIFICATE_SHA1_FINGERPRINT "2C F5 E8 CF 15 DC BE 59 C9 AB 54 A1 B9 70 35 5F 1B 1E D1 D2"
 
-
-#define FIRMWARE_UPDATE_DOWNLOAD_HOST "https://raw.githubusercontent.com"
-#define FIRMWARE_UPDATE_DOWNLOAD_URI "/jappyjan/SmartWhoopGate/master/ota/" ARDUINO_BOARD "/firmware.json"
+#define FIRMWARE_UPDATE_DOWNLOAD_HOST "https://github.com"
+#define FIRMWARE_UPDATE_DOWNLOAD_LATEST_VERSION_URI "/jappyjan/SmartWhoopGate/releases/latest/download/" ARDUINO_BOARD "_firmware.bin"
+// TODO: make it possible to download a specific version by using the following template
+#define FIRMWARE_UPDATE_DOWNLOAD_SPECIFIC_VERSION_URI "/jappyjan/SmartWhoopGate/releases/download/{{VERSION}}/" ARDUINO_BOARD "_firmware.bin"
 #define FIRMWARE_UPDATE_DOWNLOAD_PORT 443
 #define FIRMWARE_VERSION 3.1

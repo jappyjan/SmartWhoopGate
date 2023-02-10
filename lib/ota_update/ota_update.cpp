@@ -22,6 +22,10 @@ boolean OTA_UPDATE::checkIfNewVersionIsAvailable() {
 void OTA_UPDATE::loop() {
 }
 
+void OTA_UPDATE::doUpdateToSpecificVersion(char* targetVersion) {
+    // TODO: implement this
+}
+
 #if defined(ARDUINO_ARCH_ESP8266)
     void OTA_UPDATE::setup() {
         // configure time
@@ -73,9 +77,9 @@ void OTA_UPDATE::loop() {
         }
     }
 
-    void OTA_UPDATE::doUpdate() {
+    void OTA_UPDATE::doUpdateToLatestVersion() {
         Serial.println("Starting OTA");
-        const char* url = FIRMWARE_UPDATE_DOWNLOAD_HOST FIRMWARE_UPDATE_DOWNLOAD_URI;
+        const char* url = FIRMWARE_UPDATE_DOWNLOAD_HOST FIRMWARE_UPDATE_DOWNLOAD_LATEST_VERSION_URI;
         HttpsOTA.begin(url, FIRMWARE_UPDATE_SERVER_CERTIFICATE); 
 
         Serial.println("Please Wait it takes some time ...");
