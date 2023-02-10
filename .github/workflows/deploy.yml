@@ -42,7 +42,7 @@ jobs:
     strategy:
       matrix:
         pio_environment: ["esp8266_d1_mini", "esp32_doit_devkit_v1"]
-        asset: ["firmware.bin", "bootloader.bin", "firmware.elf", "partitions.bin"]
+        asset: ["firmware.bin", "firmware.elf"]
 
     steps:
       - uses: actions/download-artifact@master
