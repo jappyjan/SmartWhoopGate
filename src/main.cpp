@@ -5,6 +5,7 @@
 #include "rx5808.h"
 #include "drone-detector.h"
 #include "cli.h"
+#include "ota_update.h"
 
 String serialCommandInputString = "";
 bool serialCommandInputStringComplete = false;
@@ -17,6 +18,7 @@ void setup() {
   RX5808::setup();
   DroneDetector::setup();
   WLAN::setup();
+  OTA_UPDATE::setup();
 
   Serial.println("Setup Done");
 }
@@ -34,6 +36,7 @@ void loop() {
 
   DroneDetector::loop();
   WLAN::loop();
+  OTA_UPDATE::loop();
 }
 
 void serialEvent() {
