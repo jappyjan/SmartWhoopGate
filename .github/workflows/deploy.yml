@@ -13,6 +13,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: PlatformIO Run
         uses: karniv00l/platformio-run-action@v1
+      - uses: actions/upload-artifact@master
+        with:
+          name: pio_build_output
+          path: .pio/build
 
   create_release:
     runs-on: ubuntu-latest
@@ -28,6 +32,9 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
+      - name: Set RELEASE_ASSETS_UPLOAD_URL to gh output
+        id: release_url
+        run: echo "RELEASE_ASSETS_UPLOAD_URL=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_OUTPUT
 
   upload_release_assets:
     runs-on: ubuntu-latest
@@ -39,13 +46,17 @@ jobs:
         asset: ["firmware.bin", "bootloader.bin", "firmware.elf", "partitions.bin"]
 
     steps:
+      - uses: actions/download-artifact@master
+        with:
+          name: pio_build_output
+          path: .pio/build
       - name: Upload Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          upload_url: ${{ needs.create_release.outputs.RELEASE_ASSETS_UPLOAD_URL }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: ./pio/build/${{matrix.pio_environment}}/${{matrix.asset}}
           asset_name: ${{matrix.pio_environment}}_${{matrix.asset}}
           asset_content_type: application/octet-stream
