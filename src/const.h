@@ -88,6 +88,6 @@ const uint16_t channelFreqTable[] PROGMEM = {
 
 
 #define FIRMWARE_UPDATE_DOWNLOAD_HOST "https://raw.githubusercontent.com"
-#define FIRMWARE_UPDATE_DOWNLOAD_URI "/SoulOfNoob/SmartWhoopGate32/master/ota/" ARDUINO_BOARD "/firmware.json"
+#define FIRMWARE_UPDATE_DOWNLOAD_URI "/jappyjan/SmartWhoopGate/master/ota/" ARDUINO_BOARD "/firmware.json"
 #define FIRMWARE_UPDATE_DOWNLOAD_PORT 443
 #define FIRMWARE_VERSION 3.1

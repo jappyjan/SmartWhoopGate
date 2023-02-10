@@ -24,4 +24,4 @@ jobs:
         run: pip install --upgrade platformio
 
       - name: Build Firmwares
-        run: pio ci --board=d1_mini --board=wemos_d1_mini32
+        run: pio ci --board=d1_mini --board=wemos_d1_mini32 --src=src/main.cpp
