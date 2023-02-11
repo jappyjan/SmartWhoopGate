@@ -90,7 +90,7 @@ void OTA_UPDATE::doUpdateToSpecificVersion(char* targetVersion) {
         Serial.println("Starting OTA");
         String url(FIRMWARE_UPDATE_DOWNLOAD_HOST);
         url.concat(uri);
-        HttpsOTA.begin(url, FIRMWARE_UPDATE_SERVER_CERTIFICATE); 
+        HttpsOTA.begin(url.c_str(), FIRMWARE_UPDATE_SERVER_CERTIFICATE); 
 
         Serial.println("Please Wait it takes some time ...");
     }

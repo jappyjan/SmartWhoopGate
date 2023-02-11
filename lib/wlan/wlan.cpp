@@ -99,7 +99,7 @@ void WLAN::connect()
     #endif
 
     #if defined(ARDUINO_ARCH_ESP32)
-        WLAN::connectEsp32());
+        WLAN::connectEsp32();
     #endif
 
     WLAN::state = 1;
@@ -117,7 +117,7 @@ void WLAN::connect()
 
 #if defined(ARDUINO_ARCH_ESP32)
     void WLAN::connectEsp32() {
-        WiFi.begin(WLAN::currentSSID, WLAN::currentPassword);
+        WiFi.begin(WLAN::currentSSID.c_str(), WLAN::currentPassword.c_str());
     }
 #endif
 
