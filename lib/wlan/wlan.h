@@ -13,8 +13,8 @@ class WLAN
     static void loop();
     static void setSSID(char* ssid);
     static void setPassword(char* ssid);
-    static char* currentSSID;
-    static char* currentPassword;
+    static String currentSSID;
+    static String currentPassword;
     static unsigned long testStartTime;
     static uint8_t state;
 

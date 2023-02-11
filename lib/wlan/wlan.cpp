@@ -12,8 +12,8 @@
     #include <WiFi.h>
 #endif
 
-char* WLAN::currentSSID = 0;
-char* WLAN::currentPassword = 0;
+String WLAN::currentSSID = "";
+String WLAN::currentPassword = "";
 unsigned long WLAN::testStartTime = 0;
 
 #define DISCONNECTED 0
@@ -30,21 +30,19 @@ uint8_t WLAN::state = DISCONNECTED;
 void WLAN::setup() {
     Serial.println("WLAN::setup -> start");
 
-    String ssid = "";
+    WLAN::currentSSID.clear();
     for (int i = WIFI_SSID_EEPROM_START_POS; i < WIFI_SSID_EEPROM_END_POS + 1; ++i)
     {
-        ssid.concat(char(EEPROM.read(i)));
+        WLAN::currentSSID.concat(char(EEPROM.read(i)));
     }
-    ssid.trim();
-    WLAN::currentSSID = const_cast<char*>(ssid.c_str());
+    WLAN::currentSSID.trim();
 
-    String password = "";
+    WLAN::currentPassword.clear();
     for (int i = WIFI_PASSWORD_EEPROM_START_POS; i < WIFI_PASSWORD_EEPROM_END_POS + 1; ++i)
     {
-        password.concat(char(EEPROM.read(i)));
+        WLAN::currentPassword.concat(char(EEPROM.read(i)));
     }
-    password.trim();
-    WLAN::currentPassword = const_cast<char*>(password.c_str());
+    WLAN::currentPassword.trim();
 
     #ifdef WIFI_SET_SSID
         WLAN::setSSID(WIFI_SET_SSID);
@@ -95,7 +93,7 @@ void WLAN::loop()
 void WLAN::connect()
 {
     Serial.println("WLAN::connect -> start");
-    if ((WLAN::currentSSID != NULL) && (WLAN::currentSSID[0] == '\0')) {
+    if (WLAN::currentSSID == "") {
         Serial.println("WLAN::connect -> No SSID given");
         return;
     }
@@ -114,6 +112,12 @@ void WLAN::connect()
 
 #if defined(ARDUINO_ARCH_ESP8266)
     void WLAN::connectEsp8266() {
+        Serial.print("Trying to connect to '");
+        Serial.print(WLAN::currentSSID);
+        Serial.print("' using password '");
+        Serial.print(WLAN::currentPassword);
+        Serial.println("'");
+
         WiFi.begin(WLAN::currentSSID, WLAN::currentPassword);
     }
 #endif
@@ -188,23 +192,30 @@ void WLAN::testConnection()
 }
 
 void WLAN::setSSID(char* ssid) {
-    WLAN::currentSSID = ssid;
+    WLAN::currentSSID.clear();
+    WLAN::currentSSID.concat(ssid);
 
     for (int i = WIFI_SSID_EEPROM_START_POS; i < WIFI_SSID_EEPROM_END_POS + 1; ++i)
     {
-        EEPROM.put(i, WLAN::currentSSID[i]);
+        EEPROM.put(i, WLAN::currentSSID[i - WIFI_SSID_EEPROM_START_POS]);
     }
+
     EEPROM.commit();
+
+    Serial.println("WLAN::setSSID -> SSID set");
+    Serial.print("SSID Input: "); Serial.println(ssid);
+    Serial.print("Current SSID: "); Serial.println(WLAN::currentSSID);
 
     WLAN::connect();
 }
 
 void WLAN::setPassword(char* password) {
-    WLAN::currentPassword = password;
+    WLAN::currentPassword.clear();
+    WLAN::currentPassword.concat(password);
 
     for (int i = WIFI_PASSWORD_EEPROM_START_POS; i < WIFI_PASSWORD_EEPROM_END_POS + 1; ++i)
     {
-        EEPROM.put(i, WLAN::currentPassword[i]);
+        EEPROM.put(i, WLAN::currentPassword[i - WIFI_PASSWORD_EEPROM_START_POS]);
     }
     EEPROM.commit();
 
