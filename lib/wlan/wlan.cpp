@@ -52,10 +52,6 @@ void WLAN::setup() {
         WLAN::setPassword(WIFI_SET_PASSWORD);
     #endif
 
-    Serial.println("Wifi Credentials");
-    Serial.println(WLAN::currentSSID);
-    Serial.println(WLAN::currentPassword);
-
     WLAN::connect();
     Serial.println("WLAN::setup -> done");
 
@@ -114,9 +110,6 @@ void WLAN::connect()
     void WLAN::connectEsp8266() {
         Serial.print("Trying to connect to '");
         Serial.print(WLAN::currentSSID);
-        Serial.print("' using password '");
-        Serial.print(WLAN::currentPassword);
-        Serial.println("'");
 
         WiFi.begin(WLAN::currentSSID, WLAN::currentPassword);
     }
