@@ -1,4 +1,8 @@
-#include "Arduino.h"
+#include <Arduino.h>
+
+#if defined(ARDUINO_ARCH_ESP8266)
+  #include <ESP8266WiFi.h>
+#endif
 
 #pragma once
 
@@ -16,10 +20,24 @@ class WLAN
 
   private:
     static void connect();
-    static void connectEsp32();
-    static void connectEsp8266();
     static void testConnection();
     static void updateWifiStatus();
-    static void updateEsp8266WifiStatus();
-    static void updateEsp32WifiStatus();
+
+    #if defined(ARDUINO_ARCH_ESP32)
+      static void connectEsp32();
+    #endif
+    #if defined(ARDUINO_ARCH_ESP32)
+      static void updateEsp32WifiStatus();
+    #endif
+
+    #if defined(ARDUINO_ARCH_ESP8266)
+    static void connectEsp8266();
+    #endif
+    #if defined(ARDUINO_ARCH_ESP8266)
+      static void updateEsp8266WifiStatus();
+    #endif
+
+    #if defined(ARDUINO_ARCH_ESP8266)
+      static void onESP8266WiFiEvent(WiFiEvent_t event);
+    #endif
 };

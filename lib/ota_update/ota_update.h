@@ -18,4 +18,5 @@ class OTA_UPDATE
   
   private:
     static boolean checkIfNewVersionIsAvailable();
+    static void doUpdate(char* uri);
 };

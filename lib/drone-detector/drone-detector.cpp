@@ -23,6 +23,8 @@ void DroneDetector::setup() {
     DroneDetector::rssiThresholdOffset = RSSI_THRESHOLD_OFFSET;
 
     DroneDetector::initVariables();
+
+    pinMode(D1, OUTPUT);
 }
 
 void DroneDetector::initVariables() {
@@ -154,6 +156,9 @@ void DroneDetector::handleDroneEntering(uint8_t channelIndex, int rssi) {
     // Check if RSSI is greater than the previous detected peak
     DroneDetector::rssiPeak[channelIndex] = rssi;
     DroneDetector::rssiPeakTime[channelIndex] = millis();
+
+    // TODO: only for debug, remove later
+    digitalWrite(D1, HIGH);
 }
 
 void DroneDetector::handleDroneLeaving(uint8_t channelIndex, int rssi) {
@@ -178,4 +183,7 @@ void DroneDetector::handleDroneLeaving(uint8_t channelIndex, int rssi) {
     DroneDetector::rssiPeak[channelIndex] = 0;
     DroneDetector::rssiPeakTime[channelIndex] = 0;
     DroneDetector::lastDetection[channelIndex] = millis();
+
+    // TODO: only for debug, remove later
+    digitalWrite(D1, LOW);
 }

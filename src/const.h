@@ -92,3 +92,7 @@ const uint16_t channelFreqTable[] PROGMEM = {
 #define FIRMWARE_UPDATE_DOWNLOAD_SPECIFIC_VERSION_URI "/jappyjan/SmartWhoopGate/releases/download/{{VERSION}}/" ARDUINO_BOARD "_firmware.bin"
 #define FIRMWARE_UPDATE_DOWNLOAD_PORT 443
 #define FIRMWARE_VERSION 3.1
+
+// uncomment and define to set wifi credentials once
+// #define WIFI_SET_SSID "not-my-wifi"
+// #define WIFI_SET_PASSWORD "not-my-password"

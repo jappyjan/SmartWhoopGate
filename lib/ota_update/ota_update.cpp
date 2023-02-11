@@ -22,17 +22,25 @@ boolean OTA_UPDATE::checkIfNewVersionIsAvailable() {
 void OTA_UPDATE::loop() {
 }
 
+void OTA_UPDATE::doUpdateToLatestVersion() {
+    OTA_UPDATE::doUpdate(FIRMWARE_UPDATE_DOWNLOAD_LATEST_VERSION_URI);
+}
+
 void OTA_UPDATE::doUpdateToSpecificVersion(char* targetVersion) {
-    // TODO: implement this
+    String uriString(FIRMWARE_UPDATE_DOWNLOAD_SPECIFIC_VERSION_URI);
+
+    uriString.replace("{{VERSION}}", targetVersion);
+
+    OTA_UPDATE::doUpdate(const_cast<char*>(uriString.c_str()));
 }
 
 #if defined(ARDUINO_ARCH_ESP8266)
     void OTA_UPDATE::setup() {
         // configure time
-        configTime(3 * 3600, 0, "pool.ntp.org");
+        // configTime(3 * 3600, 0, "pool.ntp.org");
     }
 
-    void OTA_UPDATE::doUpdate() {
+    void OTA_UPDATE::doUpdate(char* uri) {
         Serial.println("ESP8266 starting OTA update");
         WiFiClientSecure client;
         client.setFingerprint(FIRMWARE_UPDATE_SERVER_CERTIFICATE_SHA1_FINGERPRINT);
@@ -42,7 +50,8 @@ void OTA_UPDATE::doUpdateToSpecificVersion(char* targetVersion) {
             return;
         }
 
-        const char* url = FIRMWARE_UPDATE_DOWNLOAD_HOST FIRMWARE_UPDATE_DOWNLOAD_URI;
+        String url(FIRMWARE_UPDATE_DOWNLOAD_HOST);
+        url.concat(uri);
         ESPhttpUpdate.update(client, url);
     }
 #endif
@@ -77,9 +86,10 @@ void OTA_UPDATE::doUpdateToSpecificVersion(char* targetVersion) {
         }
     }
 
-    void OTA_UPDATE::doUpdateToLatestVersion() {
+    void OTA_UPDATE::doUpdate(char* uri) {
         Serial.println("Starting OTA");
-        const char* url = FIRMWARE_UPDATE_DOWNLOAD_HOST FIRMWARE_UPDATE_DOWNLOAD_LATEST_VERSION_URI;
+        String url(FIRMWARE_UPDATE_DOWNLOAD_HOST);
+        url.concat(uri);
         HttpsOTA.begin(url, FIRMWARE_UPDATE_SERVER_CERTIFICATE); 
 
         Serial.println("Please Wait it takes some time ...");

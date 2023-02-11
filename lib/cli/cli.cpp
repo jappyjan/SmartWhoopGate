@@ -31,6 +31,7 @@ void CLI::handleCommand(String cmd) {
 
     if (cmd.startsWith("wifi_set_ssid:")) {
         String ssid = cmd.substring(cmd.indexOf(":") + 1);
+        ssid.trim();
         
         WLAN::setSSID(const_cast<char*>(ssid.c_str()));
         return;
@@ -38,6 +39,7 @@ void CLI::handleCommand(String cmd) {
 
     if (cmd.startsWith("wifi_set_password:")) {
         String password = cmd.substring(cmd.indexOf(":") + 1);
+        password.trim();
         
         WLAN::setPassword(const_cast<char*>(password.c_str()));
         return;

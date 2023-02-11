@@ -30,15 +30,29 @@ uint8_t WLAN::state = DISCONNECTED;
 void WLAN::setup() {
     Serial.println("WLAN::setup -> start");
 
+    String ssid = "";
     for (int i = WIFI_SSID_EEPROM_START_POS; i < WIFI_SSID_EEPROM_END_POS + 1; ++i)
     {
-        WLAN::currentSSID += char(EEPROM.read(i));
+        ssid.concat(char(EEPROM.read(i)));
     }
+    ssid.trim();
+    WLAN::currentSSID = const_cast<char*>(ssid.c_str());
 
+    String password = "";
     for (int i = WIFI_PASSWORD_EEPROM_START_POS; i < WIFI_PASSWORD_EEPROM_END_POS + 1; ++i)
     {
-        WLAN::currentPassword += char(EEPROM.read(i));
+        password.concat(char(EEPROM.read(i)));
     }
+    password.trim();
+    WLAN::currentPassword = const_cast<char*>(password.c_str());
+
+    #ifdef WIFI_SET_SSID
+        WLAN::setSSID(WIFI_SET_SSID);
+    #endif
+    
+    #ifdef WIFI_SET_PASSWORD
+        WLAN::setPassword(WIFI_SET_PASSWORD);
+    #endif
 
     Serial.println("Wifi Credentials");
     Serial.println(WLAN::currentSSID);
@@ -46,7 +60,32 @@ void WLAN::setup() {
 
     WLAN::connect();
     Serial.println("WLAN::setup -> done");
+
+    #if defined(ARDUINO_ARCH_ESP8266)
+        WiFi.onEvent(WLAN::onESP8266WiFiEvent);
+    #endif
 }
+
+#if defined(ARDUINO_ARCH_ESP8266)
+    void WLAN::onESP8266WiFiEvent(WiFiEvent_t event) {
+        Serial.printf("[WiFi-event] event: %d\n", event);
+
+        switch(event) {
+            case WIFI_EVENT_STAMODE_CONNECTED:
+                Serial.println("WiFi connected");
+            case WIFI_EVENT_STAMODE_DHCP_TIMEOUT:
+                Serial.println("WiFi DHCP timeout");
+            case WIFI_EVENT_STAMODE_GOT_IP:
+                Serial.println("WiFi got IP address");
+                Serial.println("IP address: ");
+                Serial.println(WiFi.localIP());
+                break;
+            case WIFI_EVENT_STAMODE_DISCONNECTED:
+                Serial.println("WiFi lost connection");
+                break;
+        }
+    }
+#endif
 
 void WLAN::loop()
 {
@@ -66,28 +105,24 @@ void WLAN::connect()
     #endif
 
     #if defined(ARDUINO_ARCH_ESP32)
-        WLAN::connectEsp32();
+        WLAN::connectEsp32());
     #endif
 
     WLAN::state = 1;
     WLAN::testStartTime = millis();
-
-    Serial.println("WLAN::connect -> done");
 }
 
-void WLAN::connectEsp8266() {
-    #if defined(ARDUINO_ARCH_ESP8266)
-        WiFi.disconnect();
+#if defined(ARDUINO_ARCH_ESP8266)
+    void WLAN::connectEsp8266() {
         WiFi.begin(WLAN::currentSSID, WLAN::currentPassword);
-    #endif
-}
+    }
+#endif
 
-void WLAN::connectEsp32() {
-    #if defined(ARDUINO_ARCH_ESP32)
-        WiFi.disconnect();
+#if defined(ARDUINO_ARCH_ESP32)
+    void WLAN::connectEsp32() {
         WiFi.begin(WLAN::currentSSID, WLAN::currentPassword);
-    #endif
-}
+    }
+#endif
 
 void WLAN::updateWifiStatus() {
     WLAN::state = 1;
@@ -102,14 +137,14 @@ void WLAN::updateWifiStatus() {
     
 }
 
-void WLAN::updateEsp32WifiStatus() {
-    #if defined(ARDUINO_ARCH_ESP32)
+#if defined(ARDUINO_ARCH_ESP32)
+    void WLAN::updateEsp32WifiStatus() {
 
-    #endif
-}
+    }
+#endif
 
-void WLAN::updateEsp8266WifiStatus() {
-    #if defined(ARDUINO_ARCH_ESP8266)
+#if defined(ARDUINO_ARCH_ESP8266)
+    void WLAN::updateEsp8266WifiStatus() {
         wl_status_t status = WiFi.status();
 
         if (status == WL_CONNECTED) {
@@ -119,8 +154,8 @@ void WLAN::updateEsp8266WifiStatus() {
         if (status == WL_DISCONNECTED) {
             WLAN::state = 0;
         }
-    #endif
-}
+    }
+#endif
 
 void WLAN::testConnection()
 {
@@ -173,7 +208,9 @@ void WLAN::setPassword(char* password) {
     }
     EEPROM.commit();
 
-    Serial.println("WLAN::setPassword -> Password set");    
+    Serial.println("WLAN::setPassword -> Password set");
+    Serial.print("PW Input: "); Serial.println(password);
+    Serial.print("Current PW: "); Serial.println(WLAN::currentPassword);
 
     WLAN::connect();
 }
