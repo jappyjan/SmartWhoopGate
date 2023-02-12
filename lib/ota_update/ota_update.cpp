@@ -23,38 +23,40 @@ boolean OTA_UPDATE::checkIfNewVersionIsAvailable() {
 void OTA_UPDATE::loop() {
 }
 
-bool OTA_UPDATE::validateServerCertificate() {
-    Serial.println("Waiting for Time to Sync with ntp server..");
-    time_t now = time(nullptr);
-    while (now < 8 *3600 * 2) {
-        delay(500);
-        Serial.print(".");
-        now = time(nullptr);
+#if defined(ARDUINO_ARCH_ESP8266)
+    bool OTA_UPDATE::validateServerCertificate() {
+        Serial.println("Waiting for Time to Sync with ntp server..");
+        time_t now = time(nullptr);
+        while (now < 8 *3600 * 2) {
+            delay(500);
+            Serial.print(".");
+            now = time(nullptr);
+        }
+        Serial.println("");
+
+        Serial.print("Time synchronized with NTP Server! -> ");
+        struct tm timeinfo;
+        gmtime_r(&now, &timeinfo);
+        Serial.println(asctime(&timeinfo));
+
+        String host(FIRMWARE_UPDATE_DOWNLOAD_HOST);
+        host.replace("https://", "");
+        host.replace("http://", "");
+
+        X509List cert(cert_DigiCert_Global_Root_CA);
+        Serial.printf("Verifying: %s:%d...", host, FIRMWARE_UPDATE_DOWNLOAD_PORT);
+        Serial.printf("Using certificate: %s\n", cert_DigiCert_Global_Root_CA);
+
+        OTA_UPDATE::client.setTrustAnchors(&cert);
+
+        if (!OTA_UPDATE::client.connect(host, FIRMWARE_UPDATE_DOWNLOAD_PORT)) {
+            Serial.println("SSL Connection failed");
+            return false;
+        }
+
+        return true;
     }
-    Serial.println("");
-
-    Serial.print("Time synchronized with NTP Server! -> ");
-    struct tm timeinfo;
-    gmtime_r(&now, &timeinfo);
-    Serial.println(asctime(&timeinfo));
-
-    String host(FIRMWARE_UPDATE_DOWNLOAD_HOST);
-    host.replace("https://", "");
-    host.replace("http://", "");
-
-    X509List cert(cert_DigiCert_Global_Root_CA);
-    Serial.printf("Verifying: %s:%d...", host, FIRMWARE_UPDATE_DOWNLOAD_PORT);
-    Serial.printf("Using certificate: %s\n", cert_DigiCert_Global_Root_CA);
-
-    OTA_UPDATE::client.setTrustAnchors(&cert);
-
-    if (!OTA_UPDATE::client.connect(host, FIRMWARE_UPDATE_DOWNLOAD_PORT)) {
-        Serial.println("SSL Connection failed");
-        return false;
-    }
-
-    return true;
-}
+#endif
 
 void OTA_UPDATE::doUpdateToLatestVersion() {
     OTA_UPDATE::doUpdate(FIRMWARE_UPDATE_DOWNLOAD_LATEST_VERSION_URI);

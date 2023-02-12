@@ -21,5 +21,7 @@ class OTA_UPDATE
   private:
     static boolean checkIfNewVersionIsAvailable();
     static void doUpdate(char* uri);
-    static bool validateServerCertificate();
+    #if defined(ARDUINO_ARCH_ESP8266)
+      static bool validateServerCertificate();
+    #endif
 };
