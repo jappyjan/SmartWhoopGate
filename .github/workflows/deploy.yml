@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Set Firmware Version
         run: echo "#define FIRMWARE_VERSION \"${{ github.ref }}\"" > src/firmware_version.h
+      - name: Read Firmware Version
+        run: cat src/firmware_version.h
       - name: PlatformIO Run
         uses: karniv00l/platformio-run-action@v1
       - uses: actions/upload-artifact@master
