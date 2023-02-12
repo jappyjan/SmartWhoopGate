@@ -79,10 +79,7 @@ def printData(f, data, showPub = True):
             printData(f, crt.read(), False)
         f.write('\n')
 
-def get_certificate(f):
-    hostname = "github.com"
-    port = 443
-    name = "github"
+def get_certificate(f, hostname, port, name):
     context = ssl.create_default_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
@@ -113,4 +110,6 @@ def updateGithubCert():
     f.write('\n\n')
     f.write('#pragma once\n')
     f.write('\n')
-    return get_certificate(f)
+
+    get_certificate(f, "github.com", 443, "github.com")
+   # get_certificate(f, "githubusercontent.com", 443, "githubusercontent.com")

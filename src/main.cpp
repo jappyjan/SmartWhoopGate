@@ -6,6 +6,7 @@
 #include "drone-detector.h"
 #include "cli.h"
 #include "ota_update.h"
+#include "firmware_version.h"
 
 String serialCommandInputString = "";
 bool serialCommandInputStringComplete = false;
@@ -21,6 +22,7 @@ void setup() {
   OTA_UPDATE::setup();
 
   Serial.println("Setup Done");
+  Serial.print("Running Firmware Version "); Serial.println(FIRMWARE_VERSION);
 }
 
 void loop() {

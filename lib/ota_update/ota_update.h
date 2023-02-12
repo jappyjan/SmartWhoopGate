@@ -1,3 +1,6 @@
+#ifndef ota_update_h
+#define ota_update_h
+
 #include <Arduino.h>
 #include <WiFiClientSecure.h>
 
@@ -5,10 +8,18 @@
   #include <HttpsOTAUpdate.h>
 #endif
 
+struct urlDetails_t {
+    String protocol;
+    String host;
+	  int port;
+    String uri;
+};
+
 class OTA_UPDATE
 {
   public:
     static WiFiClientSecure client;
+    static BearSSL::X509List certList;
     static void setup();
     static void loop();
     static void doUpdateToLatestVersion();
@@ -23,5 +34,10 @@ class OTA_UPDATE
     static void doUpdate(char* uri);
     #if defined(ARDUINO_ARCH_ESP8266)
       static bool validateServerCertificate();
+      static void waitForNTP();
+      static bool resolveDownloadUrl(String host, int port, String uri, String *resolvedUri);
+      static urlDetails_t parseUrl(String url);
     #endif
 };
+
+#endif
