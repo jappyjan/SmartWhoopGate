@@ -103,7 +103,7 @@ void OTA_UPDATE::doUpdateToSpecificVersion(char* targetVersion) {
         while (!isFinalURL) {
             host.replace("https://", "");
             host.replace("http://", "");
-            Serial.println("resolveDownloadUrl() -> connecting to: " + host + ":" + port);
+            Serial.println("resolveDownloadUrl() -> connecting to: " + host + ":" + port + uri);
             if (!OTA_UPDATE::client.connect(host, port)) {
                 Serial.println("Connection Failed.");
                 return false;

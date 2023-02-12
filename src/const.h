@@ -92,8 +92,7 @@ const uint16_t channelFreqTable[] PROGMEM = {
 // #define FIRMWARE_UPDATE_SERVER_CERTIFICATE_SHA1_FINGERPRINT "1E:16:CC:3F:84:2F:65:FC:C0:AB:93:2D:63:8A:C6:4A:95:C9:1B:7A"
 
 #define FIRMWARE_UPDATE_DOWNLOAD_HOST "https://github.com"
-// #define FIRMWARE_UPDATE_DOWNLOAD_LATEST_VERSION_URI "/jappyjan/SmartWhoopGate/releases/latest/download/" TARGET_NAME "_firmware.bin"
-#define FIRMWARE_UPDATE_DOWNLOAD_LATEST_VERSION_URI "/jappyjan/SmartWhoopGate/releases/download/v0.0.15/" TARGET_NAME "_firmware.bin"
+#define FIRMWARE_UPDATE_DOWNLOAD_LATEST_VERSION_URI "/jappyjan/SmartWhoopGate/releases/latest/download/" TARGET_NAME "_firmware.bin"
 // TODO: make it possible to download a specific version by using the following template
 #define FIRMWARE_UPDATE_DOWNLOAD_SPECIFIC_VERSION_URI "/jappyjan/SmartWhoopGate/releases/download/{{VERSION}}/" TARGET_NAME "_firmware.bin"
 #define FIRMWARE_UPDATE_DOWNLOAD_PORT 443
