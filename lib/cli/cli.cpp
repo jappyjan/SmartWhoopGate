@@ -53,6 +53,8 @@ void CLI::handleCommand(String cmd) {
         } else {
             OTA_UPDATE::doUpdateToSpecificVersion(const_cast<char*>(version.c_str()));
         }
+
+        return;
     }
 
     Serial.println("CLI::handleCommand -> Could not parse command: ");

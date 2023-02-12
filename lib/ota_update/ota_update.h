@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <WiFiClientSecure.h>
 
 #if defined(ARDUINO_ARCH_ESP32)
   #include <HttpsOTAUpdate.h>
@@ -7,6 +8,7 @@
 class OTA_UPDATE
 {
   public:
+    static WiFiClientSecure client;
     static void setup();
     static void loop();
     static void doUpdateToLatestVersion();
@@ -19,4 +21,5 @@ class OTA_UPDATE
   private:
     static boolean checkIfNewVersionIsAvailable();
     static void doUpdate(char* uri);
+    static bool validateServerCertificate();
 };
