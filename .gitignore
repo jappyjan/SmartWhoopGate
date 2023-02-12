@@ -3,3 +3,6 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+scripts/updateGithubCert.pyc
+scripts/__pychache__
+src/firmware_version.h
