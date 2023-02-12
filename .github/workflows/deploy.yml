@@ -45,7 +45,7 @@ jobs:
 
     strategy:
       matrix:
-        pio_environment: ["esp8266_d1_mini", "esp32_doit_devkit_v1"]
+        pio_environment: ["esp8266_d1_mini", "esp32_wemos_d1_mini", "esp32_lolin_d32"]
         asset: ["firmware.bin", "firmware.elf"]
 
     steps:
