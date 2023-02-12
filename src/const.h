@@ -100,10 +100,6 @@ const uint16_t channelFreqTable[] PROGMEM = {
 #define FIRMWARE_UPDATE_LED_PIN LED_BUILTIN
 #define FIRMWARE_UPDATE_LED_PIN_HIGH_VALUE LOW
 
-// TODO: automate this somehow
-// TODO: use this ^^
-#define FIRMWARE_VERSION 3.1
-
 // uncomment and define to set wifi credentials once
 // #define WIFI_SET_SSID "not-my-wifi"
 // #define WIFI_SET_PASSWORD "not-my-password"
