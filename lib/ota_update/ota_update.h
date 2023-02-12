@@ -18,8 +18,6 @@ struct urlDetails_t {
 class OTA_UPDATE
 {
   public:
-    static WiFiClientSecure client;
-    static BearSSL::X509List certList;
     static void setup();
     static void loop();
     static void doUpdateToLatestVersion();
@@ -28,9 +26,13 @@ class OTA_UPDATE
     #if defined(ARDUINO_ARCH_ESP32)
       static void onHttpEvent(HttpEvent_t *event);
     #endif
+
+    #if defined(ARDUINO_ARCH_ESP8266)
+      static WiFiClientSecure client;
+      static BearSSL::X509List certList;
+    #endif
   
   private:
-    static boolean checkIfNewVersionIsAvailable();
     static void doUpdate(char* uri);
     #if defined(ARDUINO_ARCH_ESP8266)
       static bool validateServerCertificate();

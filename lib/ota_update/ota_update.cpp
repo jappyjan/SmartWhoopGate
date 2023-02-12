@@ -14,13 +14,10 @@
     #include <HttpsOTAUpdate.h>
 #endif
 
-
-WiFiClientSecure OTA_UPDATE::client = WiFiClientSecure();
-BearSSL::X509List OTA_UPDATE::certList(cert_DigiCert_Global_Root_CA);
-
-boolean OTA_UPDATE::checkIfNewVersionIsAvailable() {
-    return true;
-}
+#if defined(ARDUINO_ARCH_ESP8266)
+    WiFiClientSecure OTA_UPDATE::client = WiFiClientSecure();
+    BearSSL::X509List OTA_UPDATE::certList(cert_DigiCert_Global_Root_CA);
+#endif
 
 void OTA_UPDATE::loop() {
 }
