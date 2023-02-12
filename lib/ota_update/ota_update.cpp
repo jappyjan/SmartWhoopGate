@@ -1,25 +1,45 @@
 #include "ota_update.h"
 #include "../../src/const.h"
 #include "../../src/generated/github-certificates.h"
+#include <WiFiClientSecure.h>
 
 #if defined(ARDUINO_ARCH_ESP8266)
     #include <ESP8266WiFi.h>
     #include <ESP8266httpUpdate.h>
-    #include <WiFiClient.h>
-    #include <WiFiClientSecure.h>
 #endif
 
 #if defined(ARDUINO_ARCH_ESP32)
     #include <WiFi.h>
     #include <HttpsOTAUpdate.h>
+
+    bool OTA_UPDATE::updateStarted = false;
 #endif
 
+WiFiClientSecure OTA_UPDATE::client = WiFiClientSecure();
 #if defined(ARDUINO_ARCH_ESP8266)
-    WiFiClientSecure OTA_UPDATE::client = WiFiClientSecure();
     BearSSL::X509List OTA_UPDATE::certList(cert_DigiCert_Global_Root_CA);
 #endif
 
+bool OTA_UPDATE::sslIsPrepared = false;
+
 void OTA_UPDATE::loop() {
+    #if defined(ARDUINO_ARCH_ESP32)
+        if (!OTA_UPDATE::updateStarted) {
+            return;
+        }
+
+        HttpsOTAStatus_t otastatus = HttpsOTA.status();
+        if(otastatus == HTTPS_OTA_SUCCESS) {
+            OTA_UPDATE::updateStarted = false;
+            Serial.println("Firmware written successfully. Rebooting now...");
+            ESP.restart();
+        }
+        
+        if(otastatus == HTTPS_OTA_FAIL) {
+            OTA_UPDATE::updateStarted = false;
+            Serial.println("Firmware Upgrade Fail");
+        }
+    #endif
 }
 
 void OTA_UPDATE::doUpdateToLatestVersion() {
@@ -32,6 +52,116 @@ void OTA_UPDATE::doUpdateToSpecificVersion(char* targetVersion) {
     uriString.replace("{{VERSION}}", targetVersion);
 
     OTA_UPDATE::doUpdate(const_cast<char*>(uriString.c_str()));
+}
+
+urlDetails_t OTA_UPDATE::parseUrl(String url) {
+    String protocol = "";
+    int port = 80;
+    if (url.startsWith("http://")) {
+        protocol = "http://";
+        url.replace("http://", "");
+    } else {
+        protocol = "https://";
+        port = 443;
+        url.replace("https://", "");
+    }
+    int firstSlash = url.indexOf('/');
+    String host = url.substring(0, firstSlash);
+    String uri = url.substring(firstSlash);
+
+    urlDetails_t urlDetail;
+
+    urlDetail.protocol = protocol;
+    urlDetail.host = host;
+    urlDetail.port = port;
+    urlDetail.uri = uri;
+
+    return urlDetail;
+}
+
+void OTA_UPDATE::prepareSSL() {
+    if (OTA_UPDATE::sslIsPrepared) {
+        return;
+    }
+
+    #if defined(ARDUINO_ARCH_ESP8266)
+        OTA_UPDATE::client.waitForNTP();
+        OTA_UPDATE::client.setTrustAnchors(&OTA_UPDATE::certList);
+    #endif
+
+    #if defined(ARDUINO_ARCH_ESP32)
+        OTA_UPDATE::client.setCACert(cert_DigiCert_Global_Root_CA);
+    #endif
+
+    OTA_UPDATE::sslIsPrepared = true;
+}
+
+bool OTA_UPDATE::resolveDownloadUrl(String host, int port, String uri, String *resolvedUrl) {
+    bool isFinalURL = false;
+    String protocol = "https://";
+
+    OTA_UPDATE::prepareSSL();
+
+    while (!isFinalURL) {
+        host.replace("https://", "");
+        host.replace("http://", "");
+        Serial.println("resolveDownloadUrl() -> connecting to: " + host + ":" + port + uri);
+
+        if (!OTA_UPDATE::client.connect(host.c_str(), port)) {
+            Serial.println("Connection Failed.");
+            return false;
+        }
+
+        OTA_UPDATE::client.print(String("GET ") + uri + " HTTP/1.1\r\n" +
+            "Host: " + host + "\r\n" +
+            "User-Agent: ESP_OTA_GitHubArduinoLibrary\r\n" +
+            "Connection: close\r\n\r\n");
+
+        while (OTA_UPDATE::client.connected()) {
+            String response = OTA_UPDATE::client.readStringUntil('\n');
+            if (response.startsWith("location: ") || response.startsWith("Location: ")) {
+                isFinalURL = false;
+                String location = response;
+                if (response.startsWith("location: ")) {
+                    location.replace("location: ", "");
+                } else {
+                    location.replace("Location: ", "");
+                }
+                location.remove(location.length() - 1);
+
+                if (location.startsWith("http://") || location.startsWith("https://")) {
+                    //absolute URL - separate host from path
+                    urlDetails_t url = OTA_UPDATE::parseUrl(location);
+                    protocol = url.protocol;
+                    host = url.host;
+                    port = url.port;
+                    uri = url.uri;
+                } else {
+                    //relative URL - host is the same as before, location represents the new path.
+                    uri = location;
+                }
+                //leave the while loop so we don't set isFinalURL on the next line of the header.
+                break;
+            } else {
+                //location header not present - this must not be a redirect. Treat this as the final address.
+                isFinalURL = true;
+            }
+            if (response == "\r") {
+                break;
+            }
+        }
+    }
+
+    if(isFinalURL) {
+        resolvedUrl->clear();
+        resolvedUrl->concat(protocol);
+        resolvedUrl->concat(host);
+        resolvedUrl->concat(uri);
+        return true;
+    } else {
+        Serial.println("CONNECTION FAILED");
+        return false;
+    }
 }
 
 #if defined(ARDUINO_ARCH_ESP8266)
@@ -57,6 +187,8 @@ void OTA_UPDATE::doUpdateToSpecificVersion(char* targetVersion) {
     }
 
     bool OTA_UPDATE::validateServerCertificate() {
+        OTA_UPDATE::prepareSSL();
+
         String host(FIRMWARE_UPDATE_DOWNLOAD_HOST);
         host.replace("https://", "");
         host.replace("http://", "");
@@ -71,101 +203,8 @@ void OTA_UPDATE::doUpdateToSpecificVersion(char* targetVersion) {
         return true;
     }
 
-    urlDetails_t OTA_UPDATE::parseUrl(String url) {
-        String protocol = "";
-        int port = 80;
-        if (url.startsWith("http://")) {
-            protocol = "http://";
-            url.replace("http://", "");
-        } else {
-            protocol = "https://";
-            port = 443;
-            url.replace("https://", "");
-        }
-        int firstSlash = url.indexOf('/');
-        String host = url.substring(0, firstSlash);
-        String uri = url.substring(firstSlash);
-
-        urlDetails_t urlDetail;
-
-        urlDetail.protocol = protocol;
-        urlDetail.host = host;
-        urlDetail.port = port;
-        urlDetail.uri = uri;
-
-        return urlDetail;
-    }
-
-    bool OTA_UPDATE::resolveDownloadUrl(String host, int port, String uri, String *resolvedUrl) {
-        bool isFinalURL = false;
-        String protocol = "https://";
-
-        while (!isFinalURL) {
-            host.replace("https://", "");
-            host.replace("http://", "");
-            Serial.println("resolveDownloadUrl() -> connecting to: " + host + ":" + port + uri);
-            if (!OTA_UPDATE::client.connect(host, port)) {
-                Serial.println("Connection Failed.");
-                return false;
-            }
-
-            OTA_UPDATE::client.print(String("GET ") + uri + " HTTP/1.1\r\n" +
-                "Host: " + host + "\r\n" +
-                "User-Agent: ESP_OTA_GitHubArduinoLibrary\r\n" +
-                "Connection: close\r\n\r\n");
-
-            while (OTA_UPDATE::client.connected()) {
-                String response = OTA_UPDATE::client.readStringUntil('\n');
-                if (response.startsWith("location: ") || response.startsWith("Location: ")) {
-                    isFinalURL = false;
-                    String location = response;
-                    if (response.startsWith("location: ")) {
-                        location.replace("location: ", "");
-                    } else {
-                        location.replace("Location: ", "");
-                    }
-                    location.remove(location.length() - 1);
-
-                    if (location.startsWith("http://") || location.startsWith("https://")) {
-                        //absolute URL - separate host from path
-                        urlDetails_t url = OTA_UPDATE::parseUrl(location);
-                        protocol = url.protocol;
-                        host = url.host;
-                        port = url.port;
-                        uri = url.uri;
-                    } else {
-                        //relative URL - host is the same as before, location represents the new path.
-                        uri = location;
-                    }
-                    //leave the while loop so we don't set isFinalURL on the next line of the header.
-                    break;
-                } else {
-                    //location header not present - this must not be a redirect. Treat this as the final address.
-                    isFinalURL = true;
-                }
-                if (response == "\r") {
-                    break;
-                }
-            }
-        }
-
-        if(isFinalURL) {
-            resolvedUrl->clear();
-            resolvedUrl->concat(protocol);
-            resolvedUrl->concat(host);
-            resolvedUrl->concat(uri);
-            return true;
-        } else {
-            Serial.println("CONNECTION FAILED");
-            return false;
-        }
-    }
-
     void OTA_UPDATE::doUpdate(char* uri) {
         Serial.println("ESP8266 starting OTA update");
-
-        OTA_UPDATE::waitForNTP();
-        OTA_UPDATE::client.setTrustAnchors(&OTA_UPDATE::certList);
 
         bool isTrustWorthy = OTA_UPDATE::validateServerCertificate();
         if (!isTrustWorthy) {
@@ -190,6 +229,7 @@ void OTA_UPDATE::doUpdateToSpecificVersion(char* targetVersion) {
 
         ESPhttpUpdate.setLedPin(FIRMWARE_UPDATE_LED_PIN, FIRMWARE_UPDATE_LED_PIN_HIGH_VALUE);
 
+        OTA_UPDATE::prepareSSL();
         Serial.println("Starting update/download now...");
         t_httpUpdate_return ret = ESPhttpUpdate.update(OTA_UPDATE::client, resolvedUrl);
         switch(ret) {
@@ -239,9 +279,18 @@ void OTA_UPDATE::doUpdateToSpecificVersion(char* targetVersion) {
 
     void OTA_UPDATE::doUpdate(char* uri) {
         Serial.println("Starting OTA");
-        String url(FIRMWARE_UPDATE_DOWNLOAD_HOST);
-        url.concat(uri);
-        HttpsOTA.begin(url.c_str(), FIRMWARE_UPDATE_SERVER_CERTIFICATE); 
+
+        String resolvedUrl = "";
+        bool urlWasResolved = OTA_UPDATE::resolveDownloadUrl(FIRMWARE_UPDATE_DOWNLOAD_HOST, FIRMWARE_UPDATE_DOWNLOAD_PORT, uri, &resolvedUrl);
+        if (!urlWasResolved) {
+            Serial.println("Could not resolve final OTA Update url...");
+            return;
+        }
+        Serial.println("Final download url was resolved:");
+        Serial.println(resolvedUrl);
+
+        OTA_UPDATE::updateStarted = true;
+        HttpsOTA.begin(resolvedUrl.c_str(), cert_DigiCert_Global_Root_CA);
 
         Serial.println("Please Wait it takes some time ...");
     }

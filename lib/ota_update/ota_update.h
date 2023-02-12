@@ -22,23 +22,26 @@ class OTA_UPDATE
     static void loop();
     static void doUpdateToLatestVersion();
     static void doUpdateToSpecificVersion(char* targetVersion);
+    static bool sslIsPrepared;
 
     #if defined(ARDUINO_ARCH_ESP32)
       static void onHttpEvent(HttpEvent_t *event);
+      static bool updateStarted;
     #endif
 
+    static WiFiClientSecure client;
     #if defined(ARDUINO_ARCH_ESP8266)
-      static WiFiClientSecure client;
       static BearSSL::X509List certList;
     #endif
   
   private:
     static void doUpdate(char* uri);
+    static bool resolveDownloadUrl(String host, int port, String uri, String *resolvedUri);
+    static urlDetails_t parseUrl(String url);
+    static void prepareSSL();
     #if defined(ARDUINO_ARCH_ESP8266)
       static bool validateServerCertificate();
       static void waitForNTP();
-      static bool resolveDownloadUrl(String host, int port, String uri, String *resolvedUri);
-      static urlDetails_t parseUrl(String url);
     #endif
 };
 

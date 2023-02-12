@@ -94,65 +94,27 @@ void WLAN::connect()
         return;
     }
 
-    #if defined(ARDUINO_ARCH_ESP8266)
-        WLAN::connectEsp8266();
-    #endif
+    Serial.print("Trying to connect to '");
+    Serial.print(WLAN::currentSSID);
 
-    #if defined(ARDUINO_ARCH_ESP32)
-        WLAN::connectEsp32();
-    #endif
+    WiFi.begin(WLAN::currentSSID.c_str(), WLAN::currentPassword.c_str());
 
     WLAN::state = 1;
     WLAN::testStartTime = millis();
 }
 
-#if defined(ARDUINO_ARCH_ESP8266)
-    void WLAN::connectEsp8266() {
-        Serial.print("Trying to connect to '");
-        Serial.print(WLAN::currentSSID);
-
-        WiFi.begin(WLAN::currentSSID, WLAN::currentPassword);
-    }
-#endif
-
-#if defined(ARDUINO_ARCH_ESP32)
-    void WLAN::connectEsp32() {
-        WiFi.begin(WLAN::currentSSID.c_str(), WLAN::currentPassword.c_str());
-    }
-#endif
-
 void WLAN::updateWifiStatus() {
     WLAN::state = 1;
+    
+    wl_status_t status = WiFi.status();
+    if (status == WL_CONNECTED) {
+        WLAN::state = 2;
+    }
 
-    #if defined(ARDUINO_ARCH_ESP8266)
-        WLAN::updateEsp8266WifiStatus();
-    #endif
-    
-    #if defined(ARDUINO_ARCH_ESP32)
-        WLAN::updateEsp32WifiStatus();
-    #endif
-    
+    if (status == WL_DISCONNECTED) {
+        WLAN::state = 0;
+    }
 }
-
-#if defined(ARDUINO_ARCH_ESP32)
-    void WLAN::updateEsp32WifiStatus() {
-
-    }
-#endif
-
-#if defined(ARDUINO_ARCH_ESP8266)
-    void WLAN::updateEsp8266WifiStatus() {
-        wl_status_t status = WiFi.status();
-
-        if (status == WL_CONNECTED) {
-            WLAN::state = 2;
-        }
-
-        if (status == WL_DISCONNECTED) {
-            WLAN::state = 0;
-        }
-    }
-#endif
 
 void WLAN::testConnection()
 {
@@ -195,9 +157,7 @@ void WLAN::setSSID(char* ssid) {
 
     EEPROM.commit();
 
-    Serial.println("WLAN::setSSID -> SSID set");
-    Serial.print("SSID Input: "); Serial.println(ssid);
-    Serial.print("Current SSID: "); Serial.println(WLAN::currentSSID);
+    Serial.print("WLAN::setSSID -> SSID set to "); Serial.println(ssid);
 
     WLAN::connect();
 }
@@ -213,8 +173,6 @@ void WLAN::setPassword(char* password) {
     EEPROM.commit();
 
     Serial.println("WLAN::setPassword -> Password set");
-    Serial.print("PW Input: "); Serial.println(password);
-    Serial.print("Current PW: "); Serial.println(WLAN::currentPassword);
 
     WLAN::connect();
 }
