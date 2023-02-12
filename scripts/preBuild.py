@@ -1,3 +1,3 @@
 from updateGithubCert import updateGithubCert
 
-#updateGithubCert()
+updateGithubCert()

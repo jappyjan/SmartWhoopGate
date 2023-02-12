@@ -111,5 +111,23 @@ def updateGithubCert():
     f.write('#pragma once\n')
     f.write('\n')
 
-    get_certificate(f, "github.com", 443, "github.com")
-   # get_certificate(f, "githubusercontent.com", 443, "githubusercontent.com")
+    constHeader = open("src/const.h", "r");
+
+    host = ""
+    while not host.startswith("#define FIRMWARE_UPDATE_DOWNLOAD_HOST"):
+        host = constHeader.readline()
+
+    host = host.replace("#define FIRMWARE_UPDATE_DOWNLOAD_HOST ", "")
+    host = host.replace("\"", "")
+    host = host.strip()
+    host = host.replace("https://", "")
+    host = host.replace("http://", "")
+
+    hostParts = host.split(".")
+    hostParts.pop()
+    name = "".join(hostParts)
+
+    print("host: " + host)
+    print("name: " + name)
+
+    get_certificate(f, host, 443, name)
