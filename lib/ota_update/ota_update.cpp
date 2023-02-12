@@ -85,7 +85,7 @@ void OTA_UPDATE::prepareSSL() {
     }
 
     #if defined(ARDUINO_ARCH_ESP8266)
-        OTA_UPDATE::client.waitForNTP();
+        OTA_UPDATE::waitForNTP();
         OTA_UPDATE::client.setTrustAnchors(&OTA_UPDATE::certList);
     #endif
 
